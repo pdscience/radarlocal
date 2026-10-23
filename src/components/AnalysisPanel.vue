@@ -60,28 +60,7 @@ function presetButtonClass(preset: BusinessProfile): string {
         </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs text-neutral-400 mr-1 font-medium">Modelos:</span>
-        <button
-          v-for="preset in presets"
-          :key="preset.id"
-          type="button"
-          :class="presetButtonClass(preset)"
-          @click="emit('select-preset', preset)"
-        >
-          {{ presetLabel(preset) }}
-        </button>
-        <div class="w-px h-5 bg-neutral-800 mx-1 hidden sm:block" />
-        <button
-          type="button"
-          class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all border bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20 flex items-center gap-1.5"
-          title="Abrir histórico dos últimos 5 perfis consultados salvos no navegador"
-          @click="emit('open-history')"
-        >
-          <History class="w-3.5 h-3.5 text-purple-400" />
-          <span>Histórico ({{ historyCount }})</span>
-        </button>
-      </div>
+      <div class="flex flex-wrap items-center gap-2 hidden">
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-12 gap-4 pt-6">
