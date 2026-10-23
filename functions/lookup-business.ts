@@ -1,5 +1,4 @@
 import { createClient } from 'npm:@insforge/sdk';
-import { GoogleGenAI } from 'npm:@google/genai';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': Deno.env.get('APP_ORIGIN') || '*',
@@ -85,21 +84,19 @@ export default async function (req: Request): Promise<Response> {
       return jsonResponse({ error: 'Muitas tentativas. Tente novamente mais tarde.' }, 429);
     }
 
-    const geminiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!geminiKey) {
-      return jsonResponse({ error: 'Chave Gemini não configurada.' }, 500);
+    const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
+    if (!openrouterKey) {
+      return jsonResponse({ error: 'Chave OpenRouter não configurada.' }, 500);
     }
 
-    const ai = new GoogleGenAI({ apiKey: geminiKey });
+    const model = Deno.env.get('OPENROUTER_MODEL') || 'google/gemini-2.5-flash:online';
     const query = url
       ? `Busque informações públicas verificáveis desta empresa no Google Maps a partir do link: ${url}. Retorne APENAS dados que você conseguir confirmar com certeza nas fontes. Não invente valores.`
       : `Busque informações públicas verificáveis desta empresa: "${name}"${city ? ' em ' + city : ''}. Retorne APENAS dados que você conseguir confirmar com certeza nas fontes. Não invente valores.`;
 
-    const resp = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: `${query}
+    const userPrompt = `${query}
 
-Responda em JSON válido com exatamente esta estrutura (sem markdown, sem comentários):
+Responda em JSON válido com exatamente esta estrura (sem markdown, sem comentários):
 {
   "businessName": "nome completo da empresa como aparece no Google Maps",
   "city": "cidade - UF",
@@ -118,26 +115,53 @@ Responda em JSON válido com exatamente esta estrutura (sem markdown, sem coment
 Regras:
 - Use null quando não tiver certeza absoluta de um campo. NUNCA invente valores.
 - rating e reviewsCount devem ser números, não strings.
-- Se o link não corresponder a nenhuma empresa clara, retorne "businessName": null.`,
-      config: {
-        tools: [{ googleSearch: {} }] as any,
-        temperature: 0.1,
-        responseMimeType: 'application/json',
+- Se o link não corresponder a nenhuma empresa clara, retorne "businessName": null.`;
+
+    const orResp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${openrouterKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': Deno.env.get('APP_ORIGIN') || 'https://localhost',
+        'X-Title': 'Radar Local',
       },
+      body: JSON.stringify({
+        model,
+        temperature: 0.1,
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Você é um assistente que extrai apenas dados públicos e verificáveis sobre empresas do Google Maps. Responda somente com JSON válido, sem markdown nem comentários. Nunca invente valores: use null quando não tiver certeza.',
+          },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
     });
 
-    const text = resp.text || '';
+    if (!orResp.ok) {
+      const errText = await orResp.text().catch(() => '');
+      return jsonResponse({ error: 'Erro ao consultar OpenRouter.', details: `HTTP ${orResp.status}: ${errText.slice(0, 300)}` }, 502);
+    }
+
+    const orData = await orResp.json().catch(() => ({}));
+    const content: string = orData?.choices?.[0]?.message?.content || '';
     let parsed: any = null;
     try {
-      parsed = JSON.parse(text);
+      parsed = JSON.parse(content);
     } catch {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try { parsed = JSON.parse(jsonMatch[0]); } catch { parsed = null; }
       }
     }
 
-    const citations = (resp.candidates?.[0] as any)?.groundingMetadata?.groundingChunks?.map((c: any) => c?.web?.uri).filter(Boolean) || [];
+    const annotations = orData?.choices?.[0]?.message?.annotations;
+    const urlCitations: string[] = Array.isArray(annotations)
+      ? annotations.map((a: any) => a?.url_certificate?.url || a?.url).filter(Boolean)
+      : [];
+    const contentUrls = content.match(/https?:\/\/[^\s"')]+/g) || [];
+    const citations = Array.from(new Set([...urlCitations, ...contentUrls])).slice(0, 20);
 
     if (!parsed || !parsed.businessName) {
       return jsonResponse({ success: false, error: 'Não foi possível identificar a empresa neste link. Verifique o link ou informe o nome e a cidade.' });
@@ -156,7 +180,7 @@ Regras:
       hasHours: parsed.hasHours === true,
       hasWhatsapp: parsed.hasWhatsapp === true,
       summary: parsed.summary || '',
-      extracted: text.slice(0, 4000),
+      extracted: content.slice(0, 4000),
       citations,
       confidence: parsed.rating !== null || parsed.reviewsCount !== null ? 0.8 : 0.5,
     };

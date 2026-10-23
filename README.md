@@ -12,7 +12,7 @@ Auditor de presença local no Google Maps e Google Ads. Frontend em Vue 3 + Type
    `npx -y @insforge/cli current`
    `npx -y @insforge/cli link --project-id <project-id>`
 3. Crie `.env.local` a partir de `.env.example` e preencha `VITE_INSFORGE_URL` e `VITE_INSFORGE_ANON_KEY`.
-4. Mantenha `GEMINI_API_KEY` como secret do InsForge. Nunca use prefixo `VITE_` nessa chave.
+4. Mantenha `OPENROUTER_API_KEY` como secret do InsForge. Nunca use prefixo `VITE_` nessa chave.
 5. Inicie a aplicação:
    `npm run dev`
 

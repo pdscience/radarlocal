@@ -19,7 +19,7 @@ Use the `insforge` skill for SDK and app integration work. Use the `insforge-cli
 
 ## Security
 
-- Keep `GEMINI_API_KEY` and the InsForge admin API key server-side only.
+- Keep `OPENROUTER_API_KEY` and the InsForge admin API key server-side only.
 - Only `VITE_INSFORGE_URL` and `VITE_INSFORGE_ANON_KEY` may be exposed to the browser.
 - Never commit `.env`, `.env.local`, or `.insforge/project.json`.
 - Do not introduce fabricated business data or silent fallbacks. Missing data must be shown as unverified.
