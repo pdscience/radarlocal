@@ -416,11 +416,6 @@ function printReport(): void {
       />
 
       <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        <PublicLeadFlow v-if="showPublicFlow" :consultant-name="consultantName" :consultant-phone="consultantPhone" />
-        <div class="flex items-center justify-between">
-          <p class="text-xs text-neutral-500">Fluxo público lead-first. Dados privados: importe manualmente.</p>
-          <button @click="showPublicFlow = !showPublicFlow" class="text-xs text-neutral-400 hover:text-white">{{ showPublicFlow ? 'Ocultar fluxo público' : 'Mostrar fluxo público' }}</button>
-        </div>
         <AnalysisPanel
           :input-url="inputUrl"
           :profile="profile"
