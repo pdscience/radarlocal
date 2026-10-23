@@ -110,7 +110,7 @@ function setTicket(value: number): void {
 </script>
 
 <template>
-  <div v-if="telemetry" class="space-y-6">
+  <div class="space-y-6">
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
         <div>
@@ -119,20 +119,19 @@ function setTicket(value: number): void {
               <span>Visualizações no Google</span>
               <MetricInfoTooltip
                 title="Visualizações no Google"
-                text="Total de vezes que o perfil foi exibido na Pesquisa Google e no Google Maps. No SEO Local, mede o alcance orgânico da empresa para palavras-chave da sua área de atuação."
-                impact="Quanto maior a autoridade no mapa, mais impressões gratuitas o negócio conquista."
+                text="Total de vezes que o perfil foi exibido na Pesquisa Google e no Google Maps. Métricas de Insights são privadas e exigem acesso ao Google Business Profile."
+                impact="Não disponível sem importação manual dos dados do proprietário."
                 align="left"
               />
             </div>
-            <TrendingUp class="w-4 h-4 text-emerald-400" />
+            <TrendingUp class="w-4 h-4 text-neutral-500" />
           </div>
-          <span class="text-3xl font-extrabold text-white tabular-nums">
-            {{ formatNumber(telemetry.views) }}
+          <span class="text-2xl font-semibold text-neutral-400 tabular-nums">
+            {{ profile.telemetry?.views !== undefined && profile.telemetry?.views !== null ? formatNumber(profile.telemetry.views) : 'Não verificado' }}
           </span>
         </div>
-        <div class="mt-3 flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
-          <span>+{{ telemetry.viewsGrowth }}%</span>
-          <span class="text-neutral-500 font-normal">vs. período anterior</span>
+        <div class="mt-3 text-xs text-neutral-500">
+          {{ profile.telemetry?.viewsGrowth !== undefined && profile.telemetry?.viewsGrowth !== null ? `+${profile.telemetry.viewsGrowth}% vs. período anterior` : 'Dados privados não obtidos' }}
         </div>
       </div>
 
@@ -143,20 +142,19 @@ function setTicket(value: number): void {
               <span>Interações Concretas</span>
               <MetricInfoTooltip
                 title="Interações Concretas (CTR Local)"
-                text="Soma de ações diretas dos clientes (rotas, ligações, cliques e agendamentos). Para o algoritmo do Google, alto engajamento comprova relevância e impulsiona a posição no Local 3-Pack."
-                impact="Sinal comportamental decisivo para superar concorrentes locais."
+                text="Soma de ações diretas dos clientes. Dados de Insights são privados e exigem acesso ao Google Business Profile."
+                impact="Não disponível sem importação manual dos dados do proprietário."
                 align="left"
               />
             </div>
-            <TrendingUp class="w-4 h-4 text-emerald-400" />
+            <TrendingUp class="w-4 h-4 text-neutral-500" />
           </div>
-          <span class="text-3xl font-extrabold text-white tabular-nums">
-            {{ telemetry.interactions }}
+          <span class="text-2xl font-semibold text-neutral-400 tabular-nums">
+            {{ profile.telemetry?.interactions !== undefined && profile.telemetry?.interactions !== null ? profile.telemetry.interactions : 'Não verificado' }}
           </span>
         </div>
-        <div class="mt-3 flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
-          <span>+{{ telemetry.interactionsGrowth }}%</span>
-          <span class="text-neutral-500 font-normal">crescimento sustentado</span>
+        <div class="mt-3 text-xs text-neutral-500">
+          {{ profile.telemetry?.interactionsGrowth !== undefined && profile.telemetry?.interactionsGrowth !== null ? `+${profile.telemetry.interactionsGrowth}% crescimento sustentado` : 'Dados privados não obtidos' }}
         </div>
       </div>
 
@@ -176,13 +174,13 @@ function setTicket(value: number): void {
           </div>
           <div class="flex items-baseline gap-2">
             <span class="text-3xl font-extrabold text-amber-400 tabular-nums">
-              {{ profile.rating.toFixed(1) }}
+              {{ profile.rating ? profile.rating.toFixed(1) : 'Não verificado' }}
             </span>
-            <span class="text-xs text-neutral-400">★ ★ ★ ★ ★</span>
+            <span v-if="profile.rating" class="text-xs text-neutral-400">★ ★ ★ ★ ★</span>
           </div>
         </div>
         <div class="mt-3 text-xs text-neutral-300 font-medium">
-          <strong class="text-white tabular-nums">{{ profile.reviewsCount }} avaliações</strong> verificadas
+          <strong class="text-white tabular-nums">{{ profile.reviewsCount || 0 }} avaliações</strong> {{ profile.reviewsCount ? 'verificadas' : 'não verificadas' }}
         </div>
       </div>
     </div>
@@ -245,7 +243,7 @@ function setTicket(value: number): void {
       </div>
     </div>
 
-    <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl space-y-6">
+    <div v-if="telemetry" class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl space-y-6">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-neutral-800">
         <div class="space-y-1">
           <div class="flex items-center gap-2 text-xs text-emerald-400 font-bold uppercase tracking-wider">
@@ -588,7 +586,7 @@ function setTicket(value: number): void {
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div v-if="telemetry" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div class="lg:col-span-6 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4">
         <div class="flex items-center justify-between">
           <div>

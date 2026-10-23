@@ -5,7 +5,6 @@ import AnalysisPanel from './components/AnalysisPanel.vue';
 import TabNav from './components/TabNav.vue';
 import FooterBar from './components/FooterBar.vue';
 import ReportPrintView from './components/ReportPrintView.vue';
-import PublicLeadFlow from './components/PublicLeadFlow.vue';
 import DiagnosisTab from './components/tabs/DiagnosisTab.vue';
 import PreviewTab from './components/tabs/PreviewTab.vue';
 import CommercialTab from './components/tabs/CommercialTab.vue';
@@ -21,6 +20,7 @@ import { useRegionalComparison } from './composables/useRegionalComparison';
 import { useHistory } from './composables/useHistory';
 import { usePrintReport } from './composables/usePrintReport';
 import { usePublicAnalysis } from './composables/usePublicAnalysis';
+import { functionsBaseUrl } from './lib/insforge';
 import type {
   ActiveTab,
   AnalysisHistoryItem,
@@ -46,7 +46,6 @@ const ticketAverage = ref(500);
 const targetConversionBoost = ref(5);
 const regionFilter = ref('dentista-dourados');
 const publicAnalysis = usePublicAnalysis();
-const showPublicFlow = ref(true);
 
 const { history, save: saveToHistory, remove: removeHistoryItem, clear: clearHistory } =
   useHistory(inputUrl);
@@ -113,91 +112,142 @@ function selectPreset(preset: BusinessProfile): void {
   };
 }
 
+function extractBusinessFromCandidate(extracted: string): { businessName: string | null; city: string | null } {
+  if (!extracted) return { businessName: null, city: null };
+  const lines = extracted
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith('Fonte:') && !l.toLowerCase().includes('citação'));
+  const first = lines[0] || '';
+  const nameMatch = first.match(/(?:Empresa|Nome|Local)[:\-]\s*(.+)/i);
+  const businessName = nameMatch ? nameMatch[1].trim() : first.replace(/[\[\]()]/g, '').trim() || null;
+  const cityMatch = extracted.match(/(?:Cidade|Localização|Endereço)[^,\n]*,?\s*([^,\n]+(?:-[A-Z]{2})?)/i);
+  const city = cityMatch ? cityMatch[1].trim() : null;
+  return { businessName: businessName && businessName.length > 2 ? businessName : null, city };
+}
+
 async function startAnalysis(): Promise<void> {
   const rawUrl = inputUrl.value.trim();
   if (!rawUrl) {
     analysisNotification.value = {
       type: 'error',
-      message: 'Por favor, digite ou cole um link do Google Maps ou anúncio do Google.',
+      message: 'Por favor, digite ou cole um link do Google Maps ou link de compartilhamento.',
+    };
+    return;
+  }
+
+  try {
+    const u = new URL(rawUrl);
+    const host = u.hostname.toLowerCase();
+    if (
+      !host.includes('google.com') &&
+      !host.includes('maps.app.goo.gl') &&
+      !host.includes('goo.gl') &&
+      !host.includes('share.google')
+    ) {
+      analysisNotification.value = {
+        type: 'error',
+        message: 'URL deve ser do Google Maps ou link de compartilhamento do Google.',
+      };
+      return;
+    }
+  } catch {
+    analysisNotification.value = {
+      type: 'error',
+      message: 'URL inválida.',
     };
     return;
   }
 
   isAnalyzing.value = true;
+  analysisNotification.value = null;
 
   try {
-    const response = await fetch('/api/analyze-url', {
+    const baseUrl = functionsBaseUrl || import.meta.env.VITE_INSFORGE_URL;
+    if (!baseUrl) {
+      throw new Error('Configuração InsForge ausente.');
+    }
+
+    const lookupRes = await fetch(`${baseUrl}/functions/lookup-business`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: rawUrl, name: profile.value.name, city: profile.value.city }),
+      body: JSON.stringify({ url: rawUrl, name: profile.value.name || undefined, city: profile.value.city || undefined }),
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      if (data.profile) {
-        const isDourados =
-          rawUrl.includes('egcrlmasdBwK6Q5ND') ||
-          String(data.profile.name || '').toLowerCase().includes('dourados');
-
-        const newProfile: BusinessProfile = {
-          id: `analyzed-${Date.now()}`,
-          name: data.profile.name || 'Dourados Odontologia',
-          city: data.profile.city || 'Dourados - MS',
-          category: data.profile.category || 'Dentista em Dourados',
-          url: rawUrl,
-          phone: data.profile.phone || '(67) 3422-5500',
-          address: data.profile.address || 'Rua Joaquim Teixeira Alves, Centro, Dourados - MS',
-          website: isDourados
-            ? 'https://www.example.com'
-            : data.profile.website || 'https://douradosodontologia.com.br',
-          adHeadline: data.profile.adHeadline || 'Dourados Odontologia - Cuidado dental suave',
-          adDescription:
-            data.profile.adDescription ||
-            'Seu dentista de confiança. Oferecemos uma ampla gama de serviços.',
-          targetKeyword: data.profile.targetKeyword || 'Dentista em Dourados',
-          hasWebsite: Boolean(data.profile.hasWebsite),
-          hasWhatsapp: isDourados ? false : Boolean(data.profile.hasWhatsapp),
-          reviewsCount: Number(data.profile.reviewsCount ?? (isDourados ? 96 : 45)),
-          rating: Number(data.profile.rating ?? (isDourados ? 5.0 : 4.6)),
-          responseRate: Number(data.profile.responseRate ?? 75),
-          photosCount: Number(data.profile.photosCount ?? 24),
-          hasProfessionalPhotos: Boolean(data.profile.hasProfessionalPhotos ?? true),
-          hasRegularHours: Boolean(data.profile.hasRegularHours ?? true),
-          hasSpecialHours: Boolean(data.profile.hasSpecialHours ?? false),
-          hasServicesList: Boolean(data.profile.hasServicesList ?? true),
-          hasRecentPosts: Boolean(data.profile.hasRecentPosts ?? false),
-          hasOptimizedDescription: Boolean(data.profile.hasOptimizedDescription ?? true),
-          hasNapConsistency: Boolean(data.profile.hasNapConsistency ?? true),
-          image: PRESET_DOURADOS.image,
-          telemetry:
-            data.profile.telemetry || (isDourados ? PRESET_DOURADOS.telemetry : undefined),
-        };
-
-        profile.value = newProfile;
-        saveToHistory(newProfile);
-        analysisNotification.value = {
-          type: 'success',
-          message: `Dados oficiais sincronizados: "${newProfile.name}" com ${newProfile.reviewsCount} avaliações (${newProfile.rating.toFixed(1)} ★) e métricas do Google Ads!`,
-        };
-        activeTab.value = 'ads_telemetry';
-        isAnalyzing.value = false;
-        return;
-      }
+    const lookupData = await lookupRes.json().catch(() => ({}));
+    if (!lookupRes.ok || !lookupData.success) {
+      throw new Error(lookupData.error || 'Não foi possível obter dados públicos deste link.');
     }
-  } catch (err) {
-    console.warn('Fallback para dados locais sincronizados:', err);
-  }
 
-  setTimeout(() => {
-    profile.value = cloneProfile(PRESET_DOURADOS);
-    saveToHistory(PRESET_DOURADOS);
+    const c = lookupData.candidate || {};
+    if (!c.businessName) {
+      throw new Error('Não foi possível identificar o nome da empresa a partir deste link. Ajuste o nome e tente novamente.');
+    }
+
+    const rating = typeof c.rating === 'number' ? c.rating : 0;
+    const reviewsCount = typeof c.reviewsCount === 'number' ? c.reviewsCount : 0;
+    const photosCount = typeof c.photosCount === 'number' ? c.photosCount : 0;
+    const website = c.website || '';
+    const phone = c.phone || '';
+    const address = c.address || '';
+    const category = c.category || 'Presença pública';
+    const city = c.city || 'Cidade não informada';
+
+    const newProfile: BusinessProfile = {
+      id: `analyzed-${Date.now()}`,
+      name: c.businessName,
+      city,
+      category,
+      url: rawUrl,
+      phone,
+      address,
+      website,
+      adHeadline: `${c.businessName} - Presença pública`,
+      adDescription: c.summary || 'Análise com base em dados públicos verificáveis.',
+      targetKeyword: category ? `${category} em ${city}` : 'Empresa local',
+      hasWebsite: Boolean(website),
+      hasWhatsapp: c.hasWhatsapp === true,
+      reviewsCount,
+      rating,
+      responseRate: 0,
+      photosCount,
+      hasProfessionalPhotos: photosCount >= 5,
+      hasRegularHours: c.hasHours === true,
+      hasSpecialHours: false,
+      hasServicesList: false,
+      hasRecentPosts: false,
+      hasOptimizedDescription: false,
+      hasNapConsistency: Boolean(address && phone),
+      image: PRESET_DOURADOS.image,
+    };
+
+    profile.value = newProfile;
+    saveToHistory(newProfile);
+
+    const missing: string[] = [];
+    if (!rating) missing.push('avaliação');
+    if (!reviewsCount) missing.push('nº de avaliações');
+    if (!website) missing.push('site');
+    if (!phone) missing.push('telefone');
+
     analysisNotification.value = {
       type: 'success',
-      message: `Métricas reais sincronizadas: "${PRESET_DOURADOS.name}" (${PRESET_DOURADOS.reviewsCount} avaliações, nota ${PRESET_DOURADOS.rating.toFixed(1)}, ${PRESET_DOURADOS.telemetry?.interactions} interações e anúncio ativo)!`,
+      message: missing.length === 0
+        ? `Dados públicos verificados: "${newProfile.name}" — ${reviewsCount} avaliações (${rating.toFixed(1)} ★), site e telefone confirmados. Métricas privadas (visualizações/interações) não estão disponíveis publicamente.`
+        : `Dados públicos de "${newProfile.name}" sincronizados. Não verificado: ${missing.join(', ')}. Métricas privadas (visualizações/interações) não estão disponíveis publicamente.`,
     };
-    activeTab.value = 'ads_telemetry';
+    activeTab.value = 'diagnosis';
     isAnalyzing.value = false;
-  }, 600);
+    return;
+  } catch (err: any) {
+    console.warn('Erro ao analisar link com dados públicos:', err);
+    analysisNotification.value = {
+      type: 'error',
+      message: err?.message || 'Não foi possível obter dados públicos deste link. Verifique se é um link válido do Google Maps ou link de compartilhamento.',
+    };
+    isAnalyzing.value = false;
+    return;
+  }
 }
 
 

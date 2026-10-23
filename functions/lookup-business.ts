@@ -92,24 +92,73 @@ export default async function (req: Request): Promise<Response> {
 
     const ai = new GoogleGenAI({ apiKey: geminiKey });
     const query = url
-      ? `Encontre informações públicas da empresa a partir desta URL: ${url}. Se não conseguir extrair com certeza, peça confirmação com nome e cidade.`
-      : `Encontre informações públicas da empresa "${name}" ${city ? 'em ' + city : ''}. Retorne apenas dados verificáveis publicamente.`;
+      ? `Busque informações públicas verificáveis desta empresa no Google Maps a partir do link: ${url}. Retorne APENAS dados que você conseguir confirmar com certeza nas fontes. Não invente valores.`
+      : `Busque informações públicas verificáveis desta empresa: "${name}"${city ? ' em ' + city : ''}. Retorne APENAS dados que você conseguir confirmar com certeza nas fontes. Não invente valores.`;
 
     const resp = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: query,
+      model: 'gemini-3.8-flash',
+      contents: `${query}
+
+Responda em JSON válido com exatamente esta estrutura (sem markdown, sem comentários):
+{
+  "businessName": "nome completo da empresa como aparece no Google Maps",
+  "city": "cidade - UF",
+  "category": "categoria principal exibida no Google (ex: Dentista, Pizzaria, Oficina Mecânica)",
+  "address": "endereço completo público",
+  "phone": "telefone público formatado ou null se não encontrado",
+  "website": "URL do site oficial ou null se não encontrado",
+  "rating": número de 0 a 5 com 1 casa decimal, ou null se não encontrado,
+  "reviewsCount": número inteiro de avaliações públicas, ou null se não encontrado,
+  "photosCount": número aproximado de fotos públicas, ou null se não encontrado,
+  "hasHours": true ou false se o horário de funcionamento está público,
+  "hasWhatsapp": true ou false se há link de WhatsApp público,
+  "summary": "resumo factual de 2-3 frases sobre a presença pública desta empresa"
+}
+
+Regras:
+- Use null quando não tiver certeza absoluta de um campo. NUNCA invente valores.
+- rating e reviewsCount devem ser números, não strings.
+- Se o link não corresponder a nenhuma empresa clara, retorne "businessName": null.`,
       config: {
         tools: [{ googleSearch: {} }] as any,
         temperature: 0.1,
+        responseMimeType: 'application/json',
       },
     });
 
     const text = resp.text || '';
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try { parsed = JSON.parse(jsonMatch[0]); } catch { parsed = null; }
+      }
+    }
+
+    const citations = (resp.candidates?.[0] as any)?.groundingMetadata?.groundingChunks?.map((c: any) => c?.web?.uri).filter(Boolean) || [];
+
+    if (!parsed || !parsed.businessName) {
+      return jsonResponse({ success: false, error: 'Não foi possível identificar a empresa neste link. Verifique o link ou informe o nome e a cidade.' });
+    }
+
     const candidate = {
-      query,
+      businessName: parsed.businessName || null,
+      city: parsed.city || null,
+      category: parsed.category || null,
+      address: parsed.address || null,
+      phone: parsed.phone || null,
+      website: parsed.website || null,
+      rating: typeof parsed.rating === 'number' ? parsed.rating : null,
+      reviewsCount: typeof parsed.reviewsCount === 'number' ? parsed.reviewsCount : null,
+      photosCount: typeof parsed.photosCount === 'number' ? parsed.photosCount : null,
+      hasHours: parsed.hasHours === true,
+      hasWhatsapp: parsed.hasWhatsapp === true,
+      summary: parsed.summary || '',
       extracted: text.slice(0, 4000),
-      citations: (resp.candidates?.[0] as any)?.groundingMetadata?.groundingChunks?.map((c: any) => c?.web?.uri).filter(Boolean) || [],
-      confidence: 0.6,
+      citations,
+      confidence: parsed.rating !== null || parsed.reviewsCount !== null ? 0.8 : 0.5,
     };
 
     return jsonResponse({ success: true, candidate, needsConfirmation: true });

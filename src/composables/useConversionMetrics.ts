@@ -7,7 +7,7 @@ export function useConversionMetrics(
   targetConversionBoost: Ref<number>
 ): ComputedRef<ConversionMetrics> {
   return computed<ConversionMetrics>(() => {
-    const totalInteractions = profile.value.telemetry?.interactions || 588;
+    const totalInteractions = profile.value.telemetry?.interactions || 0;
     const currentBookings = profile.value.telemetry?.bookings || 0;
     const currentConversionRate =
       totalInteractions > 0 ? (currentBookings / totalInteractions) * 100 : 0;
