@@ -39,40 +39,7 @@ const emit = defineEmits<{
         </div>
       </div>
 
-      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-neutral-400">
-        <button
-          class="whitespace-nowrap transition-colors hover:text-white flex items-center gap-1.5"
-          :class="activeTab === 'ads_telemetry' ? 'text-blue-400 font-semibold' : ''"
-          @click="emit('update:activeTab', 'ads_telemetry')"
-        >
-          <BarChart3 class="w-4 h-4" />
-          <span>Google Insights & Anúncio</span>
-        </button>
-        <button
-          class="whitespace-nowrap transition-colors hover:text-white flex items-center gap-1.5"
-          :class="activeTab === 'diagnosis' ? 'text-blue-400 font-semibold' : ''"
-          @click="emit('update:activeTab', 'diagnosis')"
-        >
-          <Award class="w-4 h-4" />
-          <span>Diagnóstico & Score</span>
-        </button>
-        <button
-          class="whitespace-nowrap transition-colors hover:text-white flex items-center gap-1.5"
-          :class="activeTab === 'preview' ? 'text-blue-400 font-semibold' : ''"
-          @click="emit('update:activeTab', 'preview')"
-        >
-          <Eye class="w-4 h-4" />
-          <span>Prévia do Anúncio</span>
-        </button>
-        <button
-          class="whitespace-nowrap transition-colors hover:text-white flex items-center gap-1.5"
-          :class="activeTab === 'commercial' ? 'text-blue-400 font-semibold' : ''"
-          @click="emit('update:activeTab', 'commercial')"
-        >
-          <Send class="w-4 h-4" />
-          <span>Script de Vendas</span>
-        </button>
-      </nav>
+      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-neutral-400"></nav>
 
       <div class="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
         <button
