@@ -111,7 +111,7 @@ function setTicket(value: number): void {
 
 <template>
   <div v-if="telemetry" class="space-y-6">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between text-xs text-neutral-400 mb-1">
@@ -183,29 +183,6 @@ function setTicket(value: number): void {
         </div>
         <div class="mt-3 text-xs text-neutral-300 font-medium">
           <strong class="text-white tabular-nums">{{ profile.reviewsCount }} avaliações</strong> verificadas
-        </div>
-      </div>
-
-      <div class="bg-neutral-900 border border-emerald-900/60 rounded-xl p-5 flex flex-col justify-between bg-gradient-to-br from-emerald-950/20 to-neutral-900">
-        <div>
-          <div class="flex items-center justify-between text-xs text-emerald-300 mb-1">
-            <div class="flex items-center gap-1.5">
-              <span>Taxa de Conversão Atual</span>
-              <MetricInfoTooltip
-                title="Taxa de Conversão Atual"
-                text="Interações concretas que viraram ação mensurável no perfil. É o indicador mais direto para saber se o tráfego está gerando negócio."
-                impact="Quanto maior essa taxa, menos investimento é necessário para gerar novos clientes."
-                align="right"
-              />
-            </div>
-            <TrendingUp class="w-4 h-4 text-emerald-400" />
-          </div>
-          <span class="text-3xl font-extrabold text-emerald-400 tabular-nums">
-            {{ conversion.currentConversionRate.toFixed(1) }}%
-          </span>
-        </div>
-        <div class="mt-3 text-xs text-emerald-200">
-          {{ conversion.currentBookings }} agendamentos / {{ telemetry.interactions }} interações
         </div>
       </div>
     </div>
