@@ -19,6 +19,7 @@ import { useConversionMetrics } from './composables/useConversionMetrics';
 import { useRegionalComparison } from './composables/useRegionalComparison';
 import { useHistory } from './composables/useHistory';
 import { usePrintReport } from './composables/usePrintReport';
+import { usePublicAnalysis } from './composables/usePublicAnalysis';
 import type {
   ActiveTab,
   AnalysisHistoryItem,
@@ -44,6 +45,8 @@ const rawTextImport = ref('');
 const ticketAverage = ref(500);
 const targetConversionBoost = ref(5);
 const regionFilter = ref('dentista-dourados');
+const publicAnalysis = usePublicAnalysis();
+const showPublicFlow = ref(true);
 
 const { history, save: saveToHistory, remove: removeHistoryItem, clear: clearHistory } =
   useHistory(inputUrl);
