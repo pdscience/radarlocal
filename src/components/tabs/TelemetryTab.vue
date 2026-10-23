@@ -186,26 +186,26 @@ function setTicket(value: number): void {
         </div>
       </div>
 
-      <div class="bg-neutral-900 border border-blue-900/60 rounded-xl p-5 flex flex-col justify-between bg-gradient-to-br from-blue-950/20 to-neutral-900">
+      <div class="bg-neutral-900 border border-emerald-900/60 rounded-xl p-5 flex flex-col justify-between bg-gradient-to-br from-emerald-950/20 to-neutral-900">
         <div>
-          <div class="flex items-center justify-between text-xs text-blue-300 mb-1">
+          <div class="flex items-center justify-between text-xs text-emerald-300 mb-1">
             <div class="flex items-center gap-1.5">
-              <span>Crédito p/ Anúncio Ativo</span>
+              <span>Taxa de Conversão Atual</span>
               <MetricInfoTooltip
-                title="Crédito Google Ads & Campanhas Locais"
-                text="Verba promocional ou saldo ativo para anúncios locais. Serve para impulsionar a visibilidade no topo do Google Maps enquanto o SEO Local orgânico ganha tração."
-                impact="Trabalha em sinergia com o perfil do Google Meu Negócio para capturar tráfego de alta urgência."
+                title="Taxa de Conversão Atual"
+                text="Interações concretas que viraram ação mensurável no perfil. É o indicador mais direto para saber se o tráfego está gerando negócio."
+                impact="Quanto maior essa taxa, menos investimento é necessário para gerar novos clientes."
                 align="right"
               />
             </div>
-            <DollarSign class="w-4 h-4 text-blue-400" />
+            <TrendingUp class="w-4 h-4 text-emerald-400" />
           </div>
-          <span class="text-3xl font-extrabold text-blue-400 tabular-nums">
-            R$ {{ formatNumber(telemetry.adCredit) }}
+          <span class="text-3xl font-extrabold text-emerald-400 tabular-nums">
+            {{ conversion.currentConversionRate.toFixed(1) }}%
           </span>
         </div>
-        <div class="mt-3 text-xs text-blue-200">
-          Disponível para ativar novos pacientes
+        <div class="mt-3 text-xs text-emerald-200">
+          {{ conversion.currentBookings }} agendamentos / {{ telemetry.interactions }} interações
         </div>
       </div>
     </div>
