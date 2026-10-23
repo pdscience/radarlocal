@@ -61,14 +61,7 @@ const emit = defineEmits<{
           <Download class="w-3.5 h-3.5 text-emerald-400" />
           <span class="hidden sm:inline">Exportar CSV</span>
         </button>
-        <button
-          class="px-3 py-2 text-xs font-medium text-neutral-300 hover:text-white bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors flex items-center gap-1.5"
-          title="Colar texto do painel do Google"
-          @click="emit('open-raw-import')"
-        >
-          <FileText class="w-3.5 h-3.5" />
-          <span class="hidden sm:inline">Colar Dados do Google</span>
-        </button>
+
         <button
           class="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap shadow-sm shadow-blue-600/30"
           title="Personalizar seções e exportar em PDF"

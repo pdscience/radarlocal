@@ -12,7 +12,7 @@ import CommercialTab from './components/tabs/CommercialTab.vue';
 import SimulatorTab from './components/tabs/SimulatorTab.vue';
 import TelemetryTab from './components/tabs/TelemetryTab.vue';
 import HistoryModal from './components/modals/HistoryModal.vue';
-import RawImportModal from './components/modals/RawImportModal.vue';
+
 import PrintCustomizeModal from './components/modals/PrintCustomizeModal.vue';
 import { PRESETS, PRESET_DOURADOS, REGIONS_DATA, cloneProfile } from './data/presets';
 import { useAuditAnalysis } from './composables/useAuditAnalysis';
@@ -39,7 +39,6 @@ const analysisNotification = ref<AnalysisNotification | null>(null);
 const copiedPitch = ref(false);
 const consultantName = ref('Especialista em SEO Local');
 const consultantPhone = ref('(11) 99999-8888');
-const showRawImportModal = ref(false);
 const showHistoryModal = ref(false);
 const showPrintCustomizeModal = ref(false);
 const rawTextImport = ref('');
@@ -201,72 +200,7 @@ async function startAnalysis(): Promise<void> {
   }, 600);
 }
 
-function importRawText(): void {
-  if (!rawTextImport.value.trim()) return;
 
-  const text = rawTextImport.value;
-  let reviews = profile.value.reviewsCount;
-  let rating = profile.value.rating;
-  let views = profile.value.telemetry?.views || 4141;
-  let interactions = profile.value.telemetry?.interactions || 588;
-  let calls = profile.value.telemetry?.calls || 151;
-  let directions = profile.value.telemetry?.directions || 434;
-  let websiteClicks = profile.value.telemetry?.websiteClicks || 3;
-  let bookings = profile.value.telemetry?.bookings || 0;
-  let adCredit = profile.value.telemetry?.adCredit || 1200;
-
-  const reviewsMatch = text.match(/Avaliações\s*[:\n]\s*(\d+)/i) || text.match(/(\d+)\s+avaliações/i);
-  if (reviewsMatch && reviewsMatch[1]) reviews = parseInt(reviewsMatch[1], 10);
-
-  const ratingMatch = text.match(/Avaliação\s+no\s+Google\s*[:\n]\s*(\d+[.,]\d+)/i);
-  if (ratingMatch && ratingMatch[1]) rating = parseFloat(ratingMatch[1].replace(',', '.'));
-
-  const viewsMatch = text.match(/Visualizações\s*[:\n]\s*([\d.]+)/i);
-  if (viewsMatch && viewsMatch[1]) views = parseInt(viewsMatch[1].replace(/\./g, ''), 10);
-
-  const interMatch = text.match(/Interações\s*[:\n]\s*(\d+)/i);
-  if (interMatch && interMatch[1]) interactions = parseInt(interMatch[1], 10);
-
-  const callsMatch = text.match(/Chamadas\s*[:\n]\s*(\d+)/i);
-  if (callsMatch && callsMatch[1]) calls = parseInt(callsMatch[1], 10);
-
-  const directionsMatch = text.match(/Orientações\s*[:\n]\s*(\d+)/i);
-  if (directionsMatch && directionsMatch[1]) directions = parseInt(directionsMatch[1], 10);
-
-  const websiteClicksMatch = text.match(/Cliques\s+no\s+website\s*[:\n]\s*(\d+)/i);
-  if (websiteClicksMatch && websiteClicksMatch[1]) websiteClicks = parseInt(websiteClicksMatch[1], 10);
-
-  const bookingsMatch = text.match(/Agendamentos\s*[:\n]\s*(\d+)/i);
-  if (bookingsMatch && bookingsMatch[1]) bookings = parseInt(bookingsMatch[1], 10);
-
-  const creditMatch = text.match(/Crédito\s+p\/\s+anúncio\s*[:\n]\s*R\$\s*([\d.]+)/i);
-  if (creditMatch && creditMatch[1]) adCredit = parseInt(creditMatch[1].replace(/\./g, ''), 10);
-
-  const updatedProfile: BusinessProfile = {
-    ...profile.value,
-    reviewsCount: reviews,
-    rating,
-    telemetry: {
-      ...(profile.value.telemetry || PRESET_DOURADOS.telemetry!),
-      views,
-      interactions,
-      calls,
-      directions,
-      websiteClicks,
-      bookings,
-      adCredit,
-    },
-  };
-
-  profile.value = updatedProfile;
-  saveToHistory(updatedProfile);
-  showRawImportModal.value = false;
-  rawTextImport.value = '';
-  analysisNotification.value = {
-    type: 'success',
-    message: 'Dados do painel do Google importados e integrados com sucesso!',
-  };
-}
 
 function restoreHistory(item: AnalysisHistoryItem): void {
   profile.value = cloneProfile(item.profile);
@@ -410,7 +344,6 @@ function printReport(): void {
         :history-count="historyCount"
         @update:active-tab="activeTab = $event"
         @export-csv="exportCSV"
-        @open-raw-import="showRawImportModal = true"
         @open-print="openPrint()"
         @open-history="showHistoryModal = true"
       />
@@ -498,13 +431,7 @@ function printReport(): void {
       @clear="clearAllHistory"
     />
 
-    <RawImportModal
-      v-if="showRawImportModal"
-      :model-value="rawTextImport"
-      @update:model-value="rawTextImport = $event"
-      @close="showRawImportModal = false"
-      @import="importRawText"
-    />
+
 
     <PrintCustomizeModal
       v-if="showPrintCustomizeModal"
