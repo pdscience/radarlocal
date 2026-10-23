@@ -60,7 +60,7 @@ function presetButtonClass(preset: BusinessProfile): string {
         </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2 hidden">
+      <div class="flex flex-wrap items-center gap-2"></div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-12 gap-4 pt-6">
