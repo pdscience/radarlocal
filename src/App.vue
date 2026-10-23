@@ -5,6 +5,7 @@ import AnalysisPanel from './components/AnalysisPanel.vue';
 import TabNav from './components/TabNav.vue';
 import FooterBar from './components/FooterBar.vue';
 import ReportPrintView from './components/ReportPrintView.vue';
+import PublicLeadFlow from './components/PublicLeadFlow.vue';
 import DiagnosisTab from './components/tabs/DiagnosisTab.vue';
 import PreviewTab from './components/tabs/PreviewTab.vue';
 import CommercialTab from './components/tabs/CommercialTab.vue';
@@ -96,9 +97,11 @@ function updateProfile(patch: Partial<BusinessProfile>): void {
 }
 
 function selectPreset(preset: BusinessProfile): void {
-  profile.value = cloneProfile(preset);
+  const demoProfile = cloneProfile(preset);
+  (demoProfile as any).id = `demo-${demoProfile.id}`;
+  profile.value = demoProfile;
   inputUrl.value = preset.url;
-  saveToHistory(preset);
+  saveToHistory(demoProfile);
 
   if (preset.id === 'dourados-odonto') regionFilter.value = 'dentista-dourados';
   else if (preset.id === 'pizza-nonna') regionFilter.value = 'pizzaria-curitiba';
@@ -107,7 +110,7 @@ function selectPreset(preset: BusinessProfile): void {
 
   analysisNotification.value = {
     type: 'success',
-    message: `Perfil carregado: "${preset.name}" (${preset.city}).`,
+    message: `Exemplo (demonstração): "${preset.name}" (${preset.city}). Dados públicos/fictícios, não é análise real.`,
   };
 }
 
@@ -413,6 +416,11 @@ function printReport(): void {
       />
 
       <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <PublicLeadFlow v-if="showPublicFlow" :consultant-name="consultantName" :consultant-phone="consultantPhone" />
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-neutral-500">Fluxo público lead-first. Dados privados: importe manualmente.</p>
+          <button @click="showPublicFlow = !showPublicFlow" class="text-xs text-neutral-400 hover:text-white">{{ showPublicFlow ? 'Ocultar fluxo público' : 'Mostrar fluxo público' }}</button>
+        </div>
         <AnalysisPanel
           :input-url="inputUrl"
           :profile="profile"

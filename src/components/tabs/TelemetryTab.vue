@@ -231,7 +231,7 @@ function setTicket(value: number): void {
           </h3>
 
           <p class="text-sm text-neutral-300 leading-relaxed">
-            A clínica possui excelente atratividade local com
+            O negócio possui atratividade local com
             <strong class="text-white">{{ formatNumber(telemetry.views) }} visualizações</strong> e
             <strong class="text-white">{{ telemetry.interactions }} interações</strong>, porém apresenta
             {{ leaksCount === 2 ? 'duas falhas' : 'uma falha' }} que anula o retorno financeiro:
@@ -246,7 +246,7 @@ function setTicket(value: number): void {
                 Gargalo 1: Agendamentos = 0 (Zero)
               </span>
               <p class="text-xs text-neutral-400 leading-relaxed">
-                Nenhum agendamento foi registrado pelo Google porque o botão de agendamento online está ausente no perfil. Os pacientes que querem marcar consulta precisam sair ou desistir.
+                Nenhum agendamento foi registrado. Sem dados privados verificados, esta análise é uma simulação e não representa valores reais. Os dados de agendamento só aparecem com importação manual ou via integração autorizada.
               </p>
             </div>
 

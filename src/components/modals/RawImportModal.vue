@@ -29,7 +29,7 @@ Agendamentos: 0`;
       </div>
 
       <p class="text-xs text-neutral-400">
-        Copie e cole aqui o texto copiado diretamente da tela do seu Google Meu Negócio ou Google Ads (incluindo visualizações, interações, chamadas e avaliações):
+        Copie e cole aqui os dados fornecidos pelo proprietário do negócio (Google Meu Negócio/Google Ads). Estes dados não são públicos. Serão marcados como "importados pelo usuário".
       </p>
 
       <textarea
