@@ -1,0 +1,10 @@
+node_modules/
+build/
+dist/
+dist-functions/
+coverage/
+.insforge/
+.DS_Store
+*.log
+.env*
+!.env.example

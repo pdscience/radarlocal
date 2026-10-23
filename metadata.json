@@ -1,0 +1,6 @@
+{
+  "name": "Radar Local - Auditor de Perfil Google Maps & SEO",
+  "description": "MVP do Radar Local para analisar anúncios e perfis de empresas no Google Maps, calcular pontuação de 0 a 100 e gerar diagnósticos comerciais com relatório em PDF.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
